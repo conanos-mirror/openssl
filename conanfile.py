@@ -4,7 +4,7 @@ import os
 
 
 class OpenSSLConan(ConanFile):
-    name = "OpenSSL"
+    name = "openssl"
     version = "1.1.1"
     settings = "os", "compiler", "arch", "build_type"
     url = "http://github.com/lasote/conan-openssl"

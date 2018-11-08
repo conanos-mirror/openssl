@@ -62,7 +62,7 @@ class OpenSSLConan(ConanFile):
 
     def requirements(self):
         if not self.options.no_zlib:
-            self.requires("zlib/1.2.11@conan/stable")
+            self.requires("zlib/1.2.11@conanos/dev")
 
     @property
     def subfolder(self):
@@ -214,13 +214,14 @@ class OpenSSLConan(ConanFile):
         win_bash = self.settings.os == "Windows"
         target = self._get_target()
 
-        self.run_in_src("./Configure %s %s" % (target, self._get_flags()), win_bash=win_bash)
+        self.run_in_src("./Configure %s %s --prefix=%s/install" % (target, self._get_flags(), os.getcwd()), win_bash=win_bash)
         self.run_in_src("make depend")
 
         self._patch_makefile()
 
         self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
         self.run_in_src("make", show_output=True, win_bash=win_bash)
+        self.run_in_src("make install")
 
     def ios_build(self):
         config_options_string = self._get_flags()
@@ -317,6 +318,9 @@ class OpenSSLConan(ConanFile):
             else:
                 self.copy(src=self.subfolder, pattern="*libcrypto.a", dst="lib", keep_path=False)
                 self.copy(src=self.subfolder, pattern="*libssl.a", dst="lib", keep_path=False)
+        elif self.settings.os == "Linux":
+            excludes="*.a" if self.options.shared else  "*.so*"
+            self.copy("*", src="%s/install"%(os.getcwd()), excludes=excludes)
         else:
             if self.options.shared:
                 self.copy(pattern="*libcrypto*.dylib", dst="lib", keep_path=False)

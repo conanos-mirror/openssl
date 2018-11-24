@@ -1,7 +1,5 @@
-from conan.packager import ConanMultiPackager
+#!/usr/bin/env python
+from conanos.build import Main
 
-
-if __name__ == "__main__":
-    builder = ConanMultiPackager()
-    builder.add_common_builds(shared_option_name="OpenSSL:shared", pure_c=True)
-    builder.run()
+if __name__ == "__main__":    
+    Main('openssl',pure_c=True)

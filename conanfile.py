@@ -12,28 +12,33 @@ class OpenSSLConan(ConanFile):
     description = "OpenSSL is an open source project that provides a robust, commercial-grade, and full-featured " \
                   "toolkit for the Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols"
     # https://github.com/openssl/openssl/blob/OpenSSL_1_0_2l/INSTALL
-    options = {"no_threads": [True, False],
-               "no_zlib": [True, False],
-               "shared": [True, False],
-               "no_asm": [True, False],
-               "386": [True, False],
-               "no_sse2": [True, False],
-               "no_bf": [True, False],
-               "no_cast": [True, False],
-               "no_des": [True, False],
-               "no_dh": [True, False],
-               "no_dsa": [True, False],
-               "no_hmac": [True, False],
-               "no_md2": [True, False],
-               "no_md5": [True, False],
-               "no_mdc2": [True, False],
-               "no_rc2": [True, False],
-               "no_rc4": [True, False],
-               "no_rc5": [True, False],
-               "no_rsa": [True, False],
-               "no_sha": [True, False],
-               "no_fpic": [True, False]}
-    default_options = "=False\n".join(options.keys()) + "=False"
+    #options = {"no_threads": [True, False],
+    #           "no_zlib": [True, False],
+    #           "shared": [True, False],
+    #           "no_asm": [True, False],
+    #           "386": [True, False],
+    #           "no_sse2": [True, False],
+    #           "no_bf": [True, False],
+    #           "no_cast": [True, False],
+    #           "no_des": [True, False],
+    #           "no_dh": [True, False],
+    #           "no_dsa": [True, False],
+    #           "no_hmac": [True, False],
+    #           "no_md2": [True, False],
+    #           "no_md5": [True, False],
+    #           "no_mdc2": [True, False],
+    #           "no_rc2": [True, False],
+    #           "no_rc4": [True, False],
+    #           "no_rc5": [True, False],
+    #           "no_rsa": [True, False],
+    #           "no_sha": [True, False],
+    #           "no_fpic": [True, False]}
+    #default_options = "=False\n".join(options.keys()) + "=False"
+    options = {
+        "shared": [True, False],
+        'fPIC': [True, False]
+    }
+    default_options = { 'shared': True, 'fPIC': False }
 
     # When a new version is available they move the tar.gz to old/ location
     source_tgz = "https://www.openssl.org/source/openssl-%s.tar.gz" % version
@@ -43,8 +48,9 @@ class OpenSSLConan(ConanFile):
         # useful for example for conditional build_requires
         if self.compiler == "Visual Studio":
             self.build_requires("strawberryperl/5.26.0@conanos/stable")
-            if not self.options.no_asm:
-                self.build_requires("nasm/2.13.01@conanos/stable")
+            #if not self.options.no_asm:
+            #    self.build_requires("nasm/2.13.01@conanos/stable")
+            self.build_requires("nasm/2.13.01@conanos/stable")
 
     def source(self):
         self.output.info("Downloading %s" % self.source_tgz)
@@ -61,8 +67,9 @@ class OpenSSLConan(ConanFile):
         del self.settings.compiler.libcxx
 
     def requirements(self):
-        if not self.options.no_zlib:
-            self.requires("zlib/1.2.11@conanos/stable")
+        #if not self.options.no_zlib:
+        #    self.requires("zlib/1.2.11@conanos/stable")
+        self.requires("zlib/1.2.11@conanos/stable")
         config_scheme(self)
 
     @property
@@ -129,7 +136,8 @@ class OpenSSLConan(ConanFile):
         if self.settings.os != "Windows":
             env_build = AutoToolsBuildEnvironment(self)
             extra_flags = ' '.join(env_build.flags)
-            extra_flags += " -fPIC" if not self.options.no_fpic else ""
+            #extra_flags += " -fPIC" if not self.options.no_fpic else ""
+            extra_flags += " -fPIC" if self.options.fPIC else ""
             if self.settings.build_type == "Debug":
                 extra_flags += " -O0"
                 if self.compiler in ["apple-clang", "clang", "gcc"]:
@@ -283,7 +291,8 @@ class OpenSSLConan(ConanFile):
     def visual_build(self):
         self.output.warn("----------CONFIGURING OPENSSL FOR WINDOWS. %s-------------" % self.version)
         target = self._get_target()
-        no_asm = "no-asm" if self.options.no_asm else ""
+        #no_asm = "no-asm" if self.options.no_asm else ""
+        no_asm = ""
         # Will output binaries to ./binaries
         with tools.vcvars(self.settings, filter_known_paths=False):
 

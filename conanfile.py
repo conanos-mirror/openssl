@@ -6,6 +6,7 @@ from conanos.build import config_scheme
 class OpenSSLConan(ConanFile):
     name = "openssl"
     version = "1.1.1"
+    exports = ["openssl.pc", "libcrypto.pc", "libssl.pc"]
     settings = "os", "compiler", "arch", "build_type"
     url = "http://github.com/lasote/conan-openssl"
     license = "The current OpenSSL licence is an 'Apache style' license: https://www.openssl.org/source/license.html"
@@ -344,6 +345,22 @@ class OpenSSLConan(ConanFile):
                   pattern="include/openssl/*.h",
                   dst="include/openssl",
                   keep_path=False)
+
+        if self.compiler == "Visual Studio":
+            replacements = {
+                "@PREFIX@" : self.package_folder,
+                "@VERSION@" : self.version
+            }
+            if self.options.shared:
+                replacements.update({
+                    "-lssl" : "-lssld",
+                    "-lcrypto" : "-lcryptod"
+                })
+            
+            for i in self.exports:
+                self.copy(i, dst=os.path.join(self.package_folder,"lib","pkgconfig"),src=os.path.join(self.build_folder))
+                for s, r in replacements.items():
+                    tools.replace_in_file(os.path.join(self.package_folder,"lib","pkgconfig", i), s, r, strict=False)
 
     def package_info(self):
         if self.compiler == "Visual Studio":
